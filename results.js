@@ -24,7 +24,7 @@ const ResultsPage = () => {
   const [dotSize, setDotSize] = useState(1); // Default dot size
   const [colorMap, setColorMap] = useState('Reds'); // Default color map
   const [dotSize2, setDotSize2] = useState(1); // Default dot size for second row
-  const [outlineThickness, setOutlineThickness] = useState(0.1); // Default thicknes
+  const [outlineThickness, setOutlineThickness] = useState(1); // Default thicknes
   const [sortOrder, setSortOrder] = useState('asc'); // Tracks whether sorting is ascending or descending
   const rowsPerPage = 100;
   const plotsPerPage = 10; // Number of plots to show before scrolling
@@ -420,6 +420,7 @@ const ResultsPage = () => {
 
   const totalPlotPages = Math.max(Math.ceil(plotsSet1.length / plotsPerPage), Math.ceil(plotsSet2.length / plotsPerPage));
   const totalGenePages = Math.ceil(genes.length / rowsPerPage);
+
 
 
   return (

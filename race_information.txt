@@ -1,0 +1,44 @@
+GSM.ID	Sample.ID	Race	Patient.ID	Age	Stage	Tx	Overall.Survival
+GSM6433597	117B	A	1	40	IIA	None	1211
+GSM6433598	117C	A	1	40	IIA	None	1211
+GSM6433599	117D	A	2	39	IIA	doxorubicin, cyclophosphamide, paclitaxel , dose dense with Neulasta support	2733
+GSM6433600	117E	A	2	39	IIA	doxorubicin, cyclophosphamide, paclitaxel , dose dense with Neulasta support	2733
+GSM6433601	118B	A	3	41	IIB	cyclophosphamide/doxorubicin + taxol	669
+GSM6433602	118C	A	3	41	IIB	cyclophosphamide/doxorubicin + taxol	669
+GSM6433603	118D	A	4	35	IIB	None	2163
+GSM6433604	118E	A	4	35	IIB	None	2163
+GSM6433605	119B	E	5	44	IIA	None	2741
+GSM6433606	119C	E	5	44	IIA	None	2741
+GSM6433607	119D	E	6	39	IIA	None	4455
+GSM6433608	119E	E	6	39	IIA	None	4455
+GSM6433609	120B	E	7	39	IIA	None	3783
+GSM6433610	120C	E	7	39	IIA	None	3783
+GSM6433611	120D	E	8	46	IIB	None	1453
+GSM6433612	120E	E	8	46	IIB	None	1453
+GSM6433585	092A	A	9	36	IIB	None	308
+GSM6433586	092B	A	9	36	IIB	None	308
+GSM6433587	093A	A	11	29	IIB	None	2761
+GSM6433588	093B	A	11	29	IIB	None	2761
+GSM6433589	093C	A	12	40	IIIC	None	190
+GSM6433590	093D	A	12	40	IIIC	None	190
+GSM6433591	094A	E	13	29	IIB	None	4667
+GSM6433592	094B	E	13	29	IIB	None	4667
+GSM6433593	094C	E	14	52	IIA	Adriamycin-cyclophosphamide; carboplatin-Taxol	718
+GSM6433594	094D	E	14	52	IIA	Adriamycin-cyclophosphamide; carboplatin-Taxol	718
+GSM6433595	095A	E	15	42	IIIC	None	815
+GSM6433596	095B	E	15	42	IIIC	None	815
+GSM6433613	395A	A	17	39	IIIB	None	605
+GSM6433614	395B	A	17	39	IIIB	None	605
+GSM6433615	395C	A	18	49	IIIC	Adriamycin-cyclophosphamide w/neulasta; taxol (paclitaxel) +/- carboplatin +/- trastuzumab	1713	
+GSM6433616	395D	A	18	49	IIIC	Adriamycin-cyclophosphamide w/neulasta; taxol (paclitaxel) +/- carboplatin +/- trastuzumab	1713
+GSM6433617	396A	A	19	44	IIIB	carboplatin plus Taxol, DDAC, carboplatin & gemcitabine, eribulin & pembrolizumab	1406
+GSM6433618	396C	A	20	36	IIIB	Adriamycin-cyclophosphamide; Taxol; docetaxel	356
+GSM6433619	396D	A	20	36	IIIB	Adriamycin-cyclophosphamide; Taxol; docetaxel	356
+GSM6433620	397A	A	21	35	IIA	DDAC; nab-paclitaxel	748
+GSM6433621	397B	A	21	35	IIA	DDAC; nab-paclitaxel	748
+GSM6433622	397C	A	22	43	IIB	Taxotere and Cytoxan	4324
+GSM6433623	397D	A	22	43	IIB	Taxotere and Cytoxan	4324
+GSM6433624	398A	A	23	53	IIB	Taxotere and Cytoxan	1000
+GSM6433625	398B	A	23	53	IIB	Taxotere and Cytoxan	1000
+GSM6433626	398C	A	24	54	IIB	None	973
+GSM6433627	398D	A	24	54	IIB	None	973
