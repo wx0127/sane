@@ -27,7 +27,7 @@ let customizationData = {
   dotSize: 1,
   colorMap: 'Reds'
 };
-
+let selectedDatasets = []
 
 app.get('/get_dataset_images', (req, res) => {
   const selectedDatasetFile = req.query.dataset;
@@ -132,7 +132,7 @@ app.post('/start_processing', (req, res) => {
   console.log('Customization data sent to Python script:', customizationData);
 
   // Pass the stored customization data to the Python script
-  const child = spawn('python3', ['-u', scriptPath, 'plot_results', 'gsm.list' , 'sample.query.list',  
+  const child = spawn('python3.9', ['-u', scriptPath, 'plot_results', 'gsm.list' , 'sample.query.list',  
     JSON.stringify(customizationData)]);
 
   child.stdout.on('data', (data) => {
@@ -151,7 +151,7 @@ app.post('/start_processing', (req, res) => {
   });
 });
 
-let selectedDatasets = []
+
 
 app.post('/set_selected_datasets', (req, res) => {
   const { datasets } = req.body; // Get the selected dataset file names from the request body
@@ -202,8 +202,10 @@ app.post('/search', (req, res) => {
     fs.writeFileSync(queryFilePath, queryContent);
 
     const scriptPath = path.resolve(__dirname, 'diffexpr.py');
+    const scriptPath2 = path.resolve(__dirname, 'generate_plots.py');
 
-    const child = spawn('python3', ['-u', scriptPath, combinedDatasetFilePath, queryFilePath, 'output.png', 'output.gene.list.txt', 'output2.png']);
+    // First child process
+    const child = spawn('python3.9', ['-u', scriptPath, combinedDatasetFilePath, queryFilePath, 'output.png', 'output.gene.list.txt', 'output2.png']);
 
     child.stdout.on('data', (data) => {
       const output = data.toString();
@@ -224,19 +226,42 @@ app.post('/search', (req, res) => {
       io.emit('output', error);
     });
 
+    // When the first child finishes, start the second child process
     child.on('close', (code) => {
-      isRunning = false;
       console.log(`child process exited with code ${code}`);
       io.emit('output', `child process exited with code ${code}`);
 
-      generateImageLists();
+      if (code === 0) { // Check if the first child exited successfully
+        // Start second child process only after the first one finishes
+        const child2 = spawn('python3.9', ['-u', scriptPath2, combinedDatasetFilePath, queryFilePath, 'output.gene.list.txt']);
 
-      io.emit('processingComplete', { message: 'Processing complete. New data available.' });
+        child2.stdout.on('data', (data) => {
+          const output = data.toString();
+          console.log(`child2: ${output}`);
+          io.emit('output', `child2: ${output}`);
+        });
 
-      res.json({ message: 'Processing complete' });
+        child2.stderr.on('data', (data) => {
+          const error = data.toString();
+          console.error(`child2 error: ${error}`);
+          io.emit('output', `child2 error: ${error}`);
+        });
+
+        child2.on('close', (code) => {
+          console.log(`child2 process exited with code ${code}`);
+          io.emit('output', `child2 process exited with code ${code}`);
+          generateImageLists(); // After both processes finish, generate the image lists.
+          io.emit('processingComplete', { message: 'Processing complete. New data available.' });
+          res.json({ message: 'Processing complete' });
+        });
+      } else {
+        isRunning = false;
+        res.status(500).json({ message: 'First process failed.' });
+      }
     });
   });
 });
+
 // Serve static files (output.png and output.gene.list.txt)
 app.use(express.static(__dirname));
 

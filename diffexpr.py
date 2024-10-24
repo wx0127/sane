@@ -13,7 +13,8 @@ from scipy.stats import ttest_ind
 from operator import itemgetter
 import datetime
 import pickle
-from multiprocessing import Pool, Value, Lock
+#from multiprocessing import Pool, Value, Lock
+from multiprocess import Pool, Value, Lock
 import time
 import shutil
 
@@ -26,8 +27,16 @@ def clear_output_directory(directory_path):
     os.makedirs(directory_path, exist_ok=True)  # Recreate the empty directory
 
 def load_dataset(dset):
-    with open(f'{dset}_data.pkl', 'rb') as f:
+    # Specify the directory where the pickle files are located
+    pickle_dir = "pickle_files"  
+    
+    # Create the full file path
+    file_path = os.path.join(pickle_dir, f'{dset}_data.pkl')
+    
+    # Open and load the pickle file
+    with open(file_path, 'rb') as f:
         data = pickle.load(f)
+    
     return data
 
 def get_dataset_count(file_path):
@@ -337,6 +346,19 @@ if __name__=="__main__":
             AA_list[dset] = result_by_dset[dset]
     
         print("Query:", gene_lists[0])
+
+        by_gene = {}
+        for dset in result_by_dset:
+            for g,i,j in result_by_dset[dset]:
+                by_gene.setdefault(g, [])
+                by_gene[g].append(np.log(i))
+        
+        chi_by_gene = {}
+        gs = []
+        for g in by_gene:
+            chi_by_gene[g] = -2.0*np.sum(np.array(by_gene[g]))
+            gs.append((g, chi_by_gene[g], chi_by_gene[g], 10, 10))
+        '''
         by_gene_EA = {}
         for dset in EA:
             for g, i, j in EA_list[dset]:
@@ -364,7 +386,7 @@ if __name__=="__main__":
             if ratio>1.2 and count_AA/len(AA) >= 0.5:
         #if ratio<1.2 and ratio>1 and count_AA/len(AA) >= 0.5:
                 gs.append((g, ratio, score, count_EA, count_AA))
-
+        '''
         gs.sort(key=itemgetter(2), reverse=True)
         fw = open(output_result, "w")
         for rank, (g, c1, c2, c3, c4) in enumerate(gs, start=1):  # Add rank (starting from 1)

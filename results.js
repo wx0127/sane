@@ -12,6 +12,7 @@ const ResultsPage = () => {
   const navigate = useNavigate();
   const [plotsSet1, setPlotsSet1] = useState([]);
   const [plotsSet2, setPlotsSet2] = useState([]);
+  const [plotsSet3, setPlotsSet3] = useState([]);
   const [genes, setGenes] = useState([]);
   const [plotPage, setPlotPage] = useState(1); // State for plot pagination
   const [genePage, setGenePage] = useState(1); // State for gene list pagination
@@ -32,7 +33,7 @@ const ResultsPage = () => {
   const [openFilter, setOpenFilter] = useState(false);
   const [selectedDataset, setSelectedDataset] = useState([]); 
   const [availableDatasets, setAvailableDatasets] = useState([
-    'Breast – lobular',
+    'Breast lobular',
     'Breast – IDC',
     'Breast – HER2',
     'Breast – ER+',
@@ -95,7 +96,7 @@ const ResultsPage = () => {
   useEffect(() => {
 
     setAvailableDatasets([
-      'Breast – lobular',
+      'Breast lobular',
       'Breast – IDC',
       'Breast – HER2',
       'Breast – ER+',
@@ -237,6 +238,12 @@ const ResultsPage = () => {
       // Convert filenames to URLs
       const imageUrlsSet2 = images2.map(img => `http://localhost:3001/output_plots_2/${img}`);
       setPlotsSet2(imageUrlsSet2); // Store the URLs for the second set
+      
+      const response3 = await axios.get('http://localhost:3001/output_plots_2_list.txt');
+      const images3 = response3.data.split('\n').filter(img => img.trim() !== '');
+      //Convert filenames to URLs
+      const imageUrlsSet3 = images3.map(img => `http://localhost:3001/output_heatmaps/${img}`);
+      setPlotsSet3(imageUrlsSet3); // Store the URLs for the second set
       
     } catch (error) {
       console.error('Error fetching plot images:', error);
@@ -411,6 +418,9 @@ const ResultsPage = () => {
   const currentPlotsSet1 = plotsSet1.slice((plotPage - 1) * plotsPerPage, plotPage * plotsPerPage);
   const currentPlotsSet2 = plotsSet2.slice((plotPage - 1) * plotsPerPage, plotPage * plotsPerPage);
 
+  const currentPlotsSet3 = plotsSet3.slice((plotPage - 1) * plotsPerPage, plotPage * plotsPerPage);
+
+
   // Handle changes for plot size and color
 
   // Calculate the genes to display based on the current gene page
@@ -435,7 +445,7 @@ const ResultsPage = () => {
       </Box>
       
       {/* Search Bar */}
-      <Box sx={{ display: 'flex', alignItems: 'center', width: '90%' }}>
+      <Box component="form" onSubmit={handleSearchSubmit} sx={{ display: 'flex', alignItems: 'center', width: '100%', mt: 2 }}>
         <TextField
           fullWidth
           value={searchTerm}
@@ -443,14 +453,9 @@ const ResultsPage = () => {
           placeholder="Search..."
           variant="outlined"
           size="small"
-          sx={{ backgroundColor: 'white', borderRadius: 2, marginRight: '10px' }} 
+          sx={{ backgroundColor: 'white', borderRadius: 2 }}
         />
-        <Button 
-          type="submit" 
-          variant="contained" 
-          sx={{ backgroundColor: 'white', color: 'black', marginRight: '15px' }} 
-          disabled={isLoading}
-        >
+        <Button type="submit" variant="contained" color="primary" sx={{ ml: 2 }} disabled={isLoading}>
           {isLoading ? 'Processing...' : 'Search'}
         </Button>
       </Box>
@@ -462,10 +467,10 @@ const ResultsPage = () => {
       <Box sx={{ width: '11%', mr: 3 }}>
   <Select
     multiple
-    value={selectedDataset} // This is still used to show what datasets are selected
+    value={selectedDataset}
     onChange={(e) => {
-      setSelectedDataset(e.target.value); // This will update selectedDataset based on selections
-    }} // This can be removed if you don't need functionality, but it's useful for tracking selected items
+      setSelectedDataset(e.target.value); // Update the selected datasets state
+    }}
     renderValue={(selected) => {
       if (selected.length === 0) {
         return <em>Dataset</em>;  // Placeholder that stays visible when nothing is selected
@@ -478,8 +483,8 @@ const ResultsPage = () => {
     MenuProps={{
       PaperProps: {
         style: {
-          maxWidth: 500, // Adjust the width to accommodate two columns
-          maxHeight: 500, // Control max height of dropdown
+          maxWidth: 500,
+          maxHeight: 500,
         },
       },
       anchorOrigin: {
@@ -490,7 +495,7 @@ const ResultsPage = () => {
         vertical: 'top',
         horizontal: 'left',
       },
-      getContentAnchorEl: null, // Ensures dropdown opens below the select box, not the entire container
+      getContentAnchorEl: null,
     }}
   >
     <MenuItem disabled value="">
@@ -502,14 +507,23 @@ const ResultsPage = () => {
       {availableDatasets.map((dataset) => (
         <MenuItem key={dataset} value={dataset} sx={{ fontSize: '0.5rem', display: 'flex', alignItems: 'center' }}>
           <Checkbox
-            checked={selectedDataset.indexOf(dataset) > -1} // This checks whether the item is selected
-            onChange={(e) => {
+            checked={selectedDataset.indexOf(dataset) > -1}
+            onChange={async (e) => {
               if (e.target.checked) {
-                // Add the dataset to the selected list if checked
                 setSelectedDataset([...selectedDataset, dataset]);
+
+                // Send the selected dataset to the backend as soon as it is checked
+                await axios.post('http://localhost:3001/set_selected_datasets', {
+                  datasets: [...selectedDataset, dataset],
+                });
               } else {
-                // Remove the dataset if unchecked
-                setSelectedDataset(selectedDataset.filter((item) => item !== dataset));
+                const updatedDatasets = selectedDataset.filter((item) => item !== dataset);
+                setSelectedDataset(updatedDatasets);
+
+                // Send the updated dataset list to the backend when unchecked
+                await axios.post('http://localhost:3001/set_selected_datasets', {
+                  datasets: updatedDatasets,
+                });
               }
             }}
             sx={{ padding: '.3px' }}
@@ -789,12 +803,15 @@ const ResultsPage = () => {
 
 
       {/* Scatter plots with pagination */}
-    <Box sx={{ overflowX: 'auto', whiteSpace: 'nowrap', mb: 8, mt:0 }}>
+    <Box sx={{ overflowX: 'auto', whiteSpace: 'nowrap', mb: 0, mt:0 }}>
 
 
       <Box sx={{ display: 'inline-flex', flexDirection: 'column' }}>
-      <Typography variant="h5" sx={{ textAlign: 'left', mb: 1 }}>Query Expression</Typography>
+      {/*<Typography variant="h5" sx={{ textAlign: 'left', mb: 1 }}>Query Expression</Typography>*/}
         <Box sx={{ display: 'flex', mb: 1 }}>
+        <Box sx={{ width: '120px', marginRight: '10px', position: 'relative' }}>
+        Query <br></br>Expression
+        </Box>
       {currentPlotsSet1.map((imgUrl, index) => {
         // Extract the dataset name from the image URL (assuming file name is like "GSM6433597.png")
         const datasetName = imgUrl.split('/').pop().split('.')[0]; // Extract filename and remove the extension
@@ -827,8 +844,12 @@ const ResultsPage = () => {
         );
       })}
     </Box>
-    <Typography variant="h5" sx={{ textAlign: 'left', mb: 0 }}>Co-localized Spots</Typography>
+    
+     {/* <Typography variant="h5" sx={{ textAlign: 'left', mb: 0 }}>Co-localized Spots</Typography>*/}
     <Box sx={{ display: 'flex' }}>
+      <Box sx={{ width: '120px', marginRight: '10px', position: 'relative' }}>
+    Co-localized <br></br>Spots
+        </Box>
     {currentPlotsSet2.map((imgUrl, index) => {
       // Extract the dataset name from the image URL (assuming file name is like "GSM6433625.png")
       const datasetName = imgUrl.split('/').pop().split('.')[0]; // Extract filename and remove the extension
@@ -848,11 +869,11 @@ const ResultsPage = () => {
     })}
     </Box>
   </Box>
-</Box>
+
 
         {/* Gene Search Bar */}
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, justifyContent: 'space-around' }}>
-        <Typography variant="h5" sx={{ textAlign: 'left', mb: 1 }}>Gene List</Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', mb: 1, justifyContent: 'space-around' }}>
+        <Typography variant="h7" sx={{ textAlign: 'left', mb: 1 }}>Gene List</Typography>
             <TextField
             value={geneSearchTerm}
             onChange={(e) => setGeneSearchTerm(e.target.value)}
@@ -874,14 +895,14 @@ const ResultsPage = () => {
         {/* Gene List Column */}
 
       {/* Flexbox container to position gene list and table side by side */}
-      <Box sx={{ display: 'flex', alignItems: 'flex-start', mt: 4 }}>
-                <Box sx={{ display: 'flex', flexDirection: 'row', maxHeight: '80vh', overflowY: 'auto', position: 'relative' }}>
+      <Box sx={{ display: 'flex', alignItems: 'flex-start', mt: 0 }}>
+            <Box sx={{ display: 'flex', flexDirection: 'row', maxHeight: '400vh', overflowY: 'auto', position: 'relative' }}>
               
               {/* Rank Column */}
-              <Box sx={{ width: '60px', marginRight: '10px', position: 'relative' }}>
-                <Typography variant="h6">Rank</Typography>
+              <Box sx={{ width: '30px', marginRight: '10px', position: 'relative' }}>
+                <Typography variant="h7">Rank</Typography>
                 {displayedGenes.map((gene, index) => (
-                  <Typography key={index} variant="body2" sx={{ mb: 1 }}>
+                  <Typography key={index} variant="body2" sx={{ /*mb: 0*/ lineHeight:1 }}>
                     {gene.split(/\s+/)[0]} {/* Display only the gene name */}
                   </Typography>
                 ))}
@@ -889,9 +910,9 @@ const ResultsPage = () => {
 
               {/* Score2 Column */}
               <Box sx={{ width: '80px', marginRight: '10px', position: 'relative' }}>
-                <Typography variant="h6">Score</Typography>
+                <Typography variant="h7">Score</Typography>
                 {displayedGenes.map((gene, index) => (
-                  <Typography key={index} variant="body2" sx={{ mb: 1 }}>
+                  <Typography key={index} variant="body2" sx={{ /*mb: 0*/ lineHeight:1 }}>
                           {!isNaN(parseFloat(gene.split(/\s+/)[3])) ? parseFloat(gene.split(/\s+/)[3]).toFixed(2) : 'N/A'}
                   </Typography>
                 ))}
@@ -899,9 +920,9 @@ const ResultsPage = () => {
 
               {/* Gene List Column */}
               <Box sx={{ width: '100px', marginRight: '20px', position: 'relative' }}>
-                <Typography variant="h6">Gene</Typography>
+                <Typography variant="h7">Gene</Typography>
                 {displayedGenes.map((gene, index) => (
-                  <Typography key={index} variant="body2" sx={{ mb: 1 }}>
+                  <Typography key={index} variant="body2" sx={{ /*mb: 0*/ lineHeight:1 }}>
                     {gene.split(/\s+/)[1]} {/* Display only the gene name */}
                   </Typography>
                 ))}
@@ -911,41 +932,36 @@ const ResultsPage = () => {
 
         {/* Main Table */}
         <Box sx={{ flexGrow: 1, overflowX: 'auto' }}> {/* The table takes the remaining space */}
-          <TableContainer component={Paper}>
-            <Table stickyHeader>
-              <TableHead>
-                <TableRow>
-                  <TableCell>Rank</TableCell>
-                  <TableCell>Gene</TableCell>
-                  <TableCell onClick={handleSortByFoldChange} style={{ cursor: 'pointer' }}>
-                    Fold Change {sortOrder === 'asc' ? '↑' : sortOrder === 'desc' ? '↓' : ''}
-                  </TableCell>
-                  <TableCell>Score</TableCell>
-                  <TableCell>Count Group1</TableCell>
-                  <TableCell>Count Group2</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-              {displayedGenes.map((gene, index) => (
-                  <TableRow key={index}>
-                    {/* Extract rank from the first column of gene data */}
-                    <TableCell>{gene.split(/\s+/)[0]}</TableCell> {/* Rank */}
-                    {gene.split(/\s+/).slice(1).map((col, colIndex) => (
-                      <TableCell key={colIndex}>{col}</TableCell>
-                    ))}
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
+        <Box sx={{ display: 'flex', alignItems: 'center',  flexShrink: 0, mt:1.8 }}>
 
-          <Pagination
-            count={totalGenePages}
-            page={genePage}
-            onChange={(event, value) => setGenePage(value)}
-            sx={{ mt: 2, display: 'flex', justifyContent: 'center' }}
-          />
+
+        {/* <img src="/clustered_heatmaps_subplot.png" alt="Baylor Logo" style={{ height: '800px', marginLeft: '0px', marginRight: '0px' }} />
+        */}
+        <Box sx={{ display: 'flex' }}>
+    {currentPlotsSet3.map((imgUrl, index) => {
+      // Extract the dataset name from the image URL (assuming file name is like "GSM6433625.png")
+      const datasetName = imgUrl.split('/').pop().split('.')[0]; // Extract filename and remove the extension
+      const timestamp = Date.now(); // Use current timestamp for cache busting
+
+    return (
+      <Box key={index} sx={{ textAlign: 'center', marginRight: '1px' }}>
+        {/* Display the extracted dataset name */}
+        {/* Add cache-busting timestamp to the image URL */}
+        <img
+          src={`${imgUrl}?v=${timestamp}`}
+          alt={`Plot Set 2 - ${index}`}
+          style={{ width: '200px', 
+          /*height: '1985px'*/ height:'1392px' }}
+        />
+      </Box>
+    );
+    })}
         </Box>
+        </Box>
+        </Box>
+      </Box>
+
+
       </Box>
       </Container>
     </>
